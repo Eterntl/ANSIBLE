@@ -52,7 +52,7 @@
           line: SELINUX=disabled
 
       - name: Setup selinux
-        shell: setenforce 0
+        shell: setenforce 0 && ulimit -SHn 655355
 
       - name: Add ssh port
         lineinfile:
