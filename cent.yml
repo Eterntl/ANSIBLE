@@ -22,7 +22,7 @@
           dest: /etc/yum.repos.d/epel.repo
         when: file_check.rc > 0
 
-      - name: If epel.repo is not exist
+      - name: Yum makecache
         shell: yum clean all && yum makecache
         when: file_check.rc > 0
 
@@ -51,7 +51,7 @@
           regexp: '^SELINUX='
           line: SELINUX=disabled
 
-      - name: setup selinux 0
+      - name: Setup selinux
         shell: setenforce 0
 
       - name: Add ssh port
@@ -71,7 +71,7 @@
           regexp: '^HISTSIZE='
           line: HISTSIZE=30
 
-      - name: setup file ulimit
+      - name: Setup file ulimit
         lineinfile:
           path: /etc/security/limits.conf
           regexp: "{{ item.regexp }}"
@@ -80,7 +80,7 @@
           - { regexp: 'sort', line: '* sort nofile 655355' }
           - { regexp: 'hard', line: '* hard nofile 655355' }
 
-      - name: system optimize
+      - name: System optimize
         blockinfile:
           path: /etc/sysctl.conf
           insertafter: "net.ipv4.tcp_max_syn_backlog = 20000"
@@ -97,7 +97,7 @@
             net.ipv4.tcp_tw_recycle = 1
             net.ipv4.tcp_tw_reuse=1
 
-      - name: login log
+      - name: Login log
         blockinfile:
           path: /etc/profile
           insertafter: "ngux"
@@ -154,17 +154,21 @@
           - { regexp: 'Mr.zy', line: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAtrRMfy84y/XeqQwZOxJnZ+XuV8dzmDMigseVtR0tqGXGwUe3Ul7OMocQTetSr5VPiU2lPMEgCo7zufn++FULkSG3z4shs0uRihk/lY0MsmmorzFom+Avnoai+XSMB69Oc6Vjsk+5mHaeKPX3H2X1wzY2sY3rw8Cpuq36apmWL4zIh6+htfFzYjWS+rmsLs4xY1O2bJvFXpcnXyEgcf0wX9pGySIYS508y8RkGg4zx3QxbCOgDiQYpaa0jPAsM4h4pexT00yvtenADtRficwKhafxTqKN4y5WqwY6i1dGalsnuYLj9XTE3YbQUmLJscv3Tvr5S5ky3idOMHFCwf2EkQ== Mr.zy' }
           - { regexp: 'bjb', line: 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEA0oRZeMk7RGzcD6HMMtBjdfJo7uKJnBRioIUV08KKvEtvFs5jALnmrF242xOMcRaCNcqxZp5IU62lM27AnC4f1oiu6E0FNTk+LdKZTgokEfqG+F2qEcWQAWN7wBLGU91Lg9os0UGaxWd6VBFgPg98OTevko9jSNwmzZnSYJhvowhm2J71DyuP5iW39AzVkODSuJqdMKGx0aiSXqwoU1lrarB5tQ7tk2PFQ2F6HlLyOwAaXQp8+XoYZz0ukE4cL8kWYnDA5wnXicvl9RYQSimZUEGqFhPYlTDBUZXjhqy3mOf1u+ZLiOwExZuDvXxYkYgCYTqkSYPqwYQ9Qojk2YCX5Q== bjb' }
 
-      - name: update iptables config
+      - name: Update iptables config
         shell: grep '57657' /etc/sysconfig/iptables
         register: FANCE
         ignore_errors: True
 
-      - name: restart iptables
+      - name: Rm iptables config
+        shell: rm -rf /etc/sysconfig/iptables
+        when: FANCE.rc > 0
+
+      - name: Restart iptables
         get_url:
-          url: https://raw.githubusercontent.com/Eterntl/config/master/iptables/iptalbes
+          url: https://raw.githubusercontent.com/Eterntl/config/master/iptables/iptables
           dest: /etc/sysconfig/iptables
         when: FANCE.rc > 0
 
-      - name: If success wget iptables.
-        shell: iptables -F && service iptables save && service iptables restart
+      - name: If success wget iptables
+        shell: service iptables restart && reboot
         when: FANCE.rc > 0
