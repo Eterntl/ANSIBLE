@@ -1,0 +1,35 @@
+# 依赖（如果是新机器）
+# cmd：ansible -i hpasswd cent10 -m shell -a 'setenforce 0 ; yum -y install libselinux-python'
+
+
+
+
+# cmd：ansible-playbook -i hpasswd upload_pubkey.yml
+
+# hpasswd
+# [cent10]
+# 192.168.0.188 ansible_user=root ansible_password=xkjztbyg
+
+
+upload_pubkey.yml
+---
+  - name: Detection dependency
+    vars:
+      - AHOSTS: cent10
+    hosts: "{{ AHOSTS }}"
+    tasks:
+
+      - name: Check libselinux-python is installed
+        command: rpm -q libselinux-python
+        register: rpm_check
+        ignore_errors: true
+
+      - name: If not is installed
+        yum: name=libselinux-python state=present
+        when: rpm_check.rc == 1
+
+      - name: upload root pubkey
+        authorized_key:
+          user: root
+          state: present
+          key: "{{lookup('file','/root/.ssh/id_rsa.pub')}}"
